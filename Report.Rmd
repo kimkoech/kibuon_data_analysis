@@ -1,0 +1,32 @@
+---
+title: "Kibuon Data Analysis"
+author: "Billy Koech"
+date: "9/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Meeting with CA (Milestone #1)
+Met with Enxhi Buxhel
+
+# Review of past projects (Milestone #2)
+Riviewed and discussed the pros and cons of two past projects
+
+# Description of the data (Milestone #3)
+
+## Source of data
+### Background
+
+I am a member of the Harvard SEAS Engineers Without Borders Chapter. In this student organization we work on projects located in developing countries to provide engineering solutions to challenges faced by local communities. One of our projects in Kenya deal with the provision of clean portable water to the communities. In the summer of 2019, I travelled to Kenya with a team of 8 to collect data on water usage trends and needs in the community. That collected data is availble in an excel sheet [here](raw-data/survey_data.xlsx)
+
+While in the community we also collected geospatial data and created a google earth kmz map. The kmz file can be found [here](raw-data/map.kmz).
+
+## What you have done with it so far and what you plan to do?
+
+
+I wrote a python script to parse the Kmz data into json file. I plan to use the jsonlite or rjson library to parse this data from json to a R data frame. I then plan to link the geospatial data to the rows in the survey data excel sheet and create map visualisations from which one can infer trends pertaining to water usage and need.
+
+## 
