@@ -6,7 +6,15 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+
+# milestone #4 packages
+library(tidyverse) 
+library("janitor")
+library(dplyr)
+library(readxl) # package for importing data
+
+
 ```
 
 # Meeting with CA (Milestone #1)
@@ -28,5 +36,71 @@ While in the community we also collected geospatial data and created a google ea
 
 
 I wrote a python script to parse the Kmz data into json file. I plan to use the jsonlite or rjson library to parse this data from json to a R data frame. I then plan to link the geospatial data to the rows in the survey data excel sheet and create map visualisations from which one can infer trends pertaining to water usage and need.
+
+
+
+# Milestone #4 
+
+
+
+
+```{r}
+# load data
+file_path <- "raw-data/survey_data.xlsx"
+
+survey_data <- read_xlsx(file_path, 
+                        range = cell_rows(1:41)) %>%
+                        clean_names()
+
+
+# graph of household liters per day versus number of people
+
+survey_data %>%
+  ggplot(aes(x = total,
+             y = household_liters_day,
+             color = wet_season_water_source)) + 
+  geom_line() + 
+  labs(
+    x = "Total number of people in household",
+    title = "Water usage trends",
+    y = "Liters of water used per day per household",
+    color = "Water sources"
+  )
+
+
+# distribution of ages in the community
+
+combined_ages <- survey_data %>%
+  mutate(under5 = x5_under_m + x5_under_f,
+         from_6_to_14 = x6_14_m + x6_14_f,
+         from_15_to_62 = x15_62_f + x15_62_m,
+         over62 = over_62_m + over_62_f)
+
+# gather the table
+gathered_ages <-gather(combined_ages,
+                       key = "age_range",
+                       value = "number_of_people",
+                       under5:over62,
+                       na.rm = TRUE) 
+
+
+# age_dist_df <- data.frame(age_range = rep(gathered_ages$age_range, times = gathered_ages$number_of_people))
+
+# plot distribution
+ggplot(gathered_ages, aes(x = age_range,
+                          y = number_of_people,
+                          group = age_range)) +
+  geom_col(fill = "#6ef0d1") +
+  labs(
+    x = "Age range",
+    title = "Distribution of ages in the community",
+    subtitle = "Which age group has the largest population?",
+    y = "Number of people"
+  )
+
+
+```
+
+
 
 ## 
