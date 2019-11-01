@@ -108,3 +108,9 @@ ggplot(gathered_ages, aes(x = age_range,
 # Milestone #5
 
 See about page
+
+
+
+# Milestone #6
+
+See web app folder called [web_app_kibuon_data](web_app_kibuon_data/)
