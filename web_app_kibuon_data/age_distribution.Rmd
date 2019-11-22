@@ -1,0 +1,11 @@
+---
+title: "Age Distribution"
+author: "Billy Koech"
+date: "11/21/2019"
+output: html_document
+---
+
+
+# Bar plot of number of people in each age group
+
+The interview questions included questions about the ages of the people living in the surveyed homes. That data is used below to visualize the general age demographics in the community. It can be observed that the largest age group is between 15 and 62.

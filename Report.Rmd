@@ -47,6 +47,7 @@ I wrote a python script to parse the Kmz data into json file. I plan to use the 
 # load data
 file_path <- "raw-data/survey_data.xlsx"
 
+# DATA Source 1:
 survey_data <- read_xlsx(file_path, 
                         range = cell_rows(1:41)) %>%
                         clean_names()
@@ -136,25 +137,43 @@ map_zip_file <- "raw-data/mygeodata.zip"
 unzip(map_zip_file, overwrite = TRUE, exdir = "raw-data/")
 
 
-# DATA Source 1:
+# DATA Source 2:
 map_of_kibuon <- st_read("raw-data/Kibuon_Map_-_Oct_15/Geographic_Borders-polygon.shp")
 
-# DATA Source 2:
+# DATA Source 3:
 distances_to_wells <- read.csv("parsing-data/distances_to_wells.csv") %>% clean_names()
 
-# DATA Source 3:
+# DATA Source 4:
 distances_to_water_sources <- read.csv("parsing-data/distances_to_water_sources.csv") %>% clean_names()
 
-# left join to create a combined table
+# left join Source 2 and 3 to create a combined table
 combined <- left_join(distances_to_wells, distances_to_water_sources, by = c("house_code", "long", "lat"))
 
 converted_to_sf <- st_as_sf(combined, coords = c("long","lat"), crs = 4326)
 ```
 
+```{r}
+# create a map for about page
+map_of_kibuon <- st_read("raw-data/Kibuon_Map_-_Oct_15/Geographic_Borders-polygon.shp")
+map_plot <- ggplot() +
+  geom_sf(data = map_of_kibuon) +
+  labs(title = "Geographic boundaries of Kibuon, Kenya",
+         subtitle = "From top left clockwise: Kibuon A, B, C, D.",
+         x = "Longitude",
+         y = "Lattitude") 
+
+map_plot
+
+ggsave("map_plot.png", plot = map_plot, device = "png", path ="web_app_kibuon_data/", scale = 1)
+
+
+
+```
+
 
 ```{r}
 # Create a map showing population
-ggplot(converted_to_sf) +
+pop_map <- ggplot(converted_to_sf) +
     geom_sf(data = map_of_kibuon) +
     geom_sf(data = converted_to_sf) +
   geom_sf(aes(size = number_of_people)) +
@@ -163,30 +182,128 @@ ggplot(converted_to_sf) +
          x = "Longitude",
          y = "Lattitude") 
 
+pop_map
 # save plot locally
-ggsave("spatial_dist.png", plot = last_plot(), device = "png", path ="web_app_kibuon_data/", scale = 1)
+ggsave("spatial_dist.png", plot = pop_map, device = "png", path ="web_app_kibuon_data/", scale = 1)
 
 
-# create model of water usage as a function of location, or as function of number of people in the household
-# then test the data on the 
+
 ```
 
 
 ```{r}
-file_path <- "distances.xlsx"
-distances_data<- read_xlsx(file_path) %>%
-                        clean_names()
+# create distribution plots to see distances based on combined data
+
+# gather data
+gathered_data <- gather(combined,
+                       key = "well",
+                       value = "distance_value",
+                       kandida:unassessed,
+                       na.rm = TRUE)
+
+# make a histogram plot
+distance_dist_plots <- gathered_data %>% ggplot(aes(x = distance_value)) + geom_histogram(binwidth = 100) + xlim(0, 3000) + facet_wrap(~well) + labs(title = "Distribution of distances from each potential well location to each house",
+         subtitle = "Each facet corresponds to a different location",
+         x = "Distance to house",
+         y = "Count") 
+
+distance_dist_plots
+
+ggsave("distance_dist_plots.png", plot = distance_dist_plots, device = "png", path ="web_app_kibuon_data/", scale = 1)
+```
 
 
-# distribuion plots
+```{r}
+# create model of water usage as a function of location, or as function of number of people in the household
+# then test the data on the 
+library(tidymodels)
 
-distances_data %>% ggplot(aes(x = distance_to_kater)) + geom_histogram(binwidth = 100) + xlim(0, 3000)
+# model fo water usage as a function of total number of people in the house
+mod <- glm(data = survey_data, formula = household_liters_day ~ total)
 
-distances_data %>% ggplot(aes(x = distance_to_ombolwanda)) + geom_histogram() + xlim(0, 3000)
+# plot of the model
+ggplot(survey_data, aes(y = household_liters_day, x= total))+
+  geom_jitter(height = 0.2) + 
+  geom_smooth(method = "glm", se= TRUE)+
+             labs(
+                 x = "Total number of people per household ",
+                 title = "Linear model of water usage per day as a fucion of number of people",
+                 subtitle = "Which age group has the largest population?",
+                 y = "Water usage per day in liters"
+             )
+```
 
-distances_data %>% ggplot(aes(x = distance_to_kawegi)) + geom_histogram() + xlim(0, 3000)
 
-distances_data %>% ggplot(aes(x = distance_to_munyu )) + geom_histogram()+ xlim(0, 3000)
+```{r}
+# extrapolate and apply to data of entire community to get water usage per day
+extrapolation <- combined %>%
+  mutate(estimate = number_of_people * coef(mod)[[2]] + coef(mod)[[1]])
+
+# write to app folder and plot
+write.csv(extrapolation, "web_app_kibuon_data/extrapolation.csv")
+ggplot(extrapolation, aes(y = estimate, x= number_of_people)) + geom_point() + geom_line() +
+             labs(
+                 x = "Total number of people per household ",
+                 title = "Application of a linear model to estimate water usage",
+                 subtitle = "Water usage is based on interview responses",
+                 y = "Extrapolated water usage per day in liters"
+             )
+```
+
+
+```{r}
+
+# create plot of the sources of the survey data
+extracted_coordinates <- survey_data %>% separate(gps_coordinates, sep = ",", c("lat", "long"))
+# remove NA's
+extracted_coordinates <- extracted_coordinates %>% filter(!is.na(lat))
+# convert st to sf
+survey_data_sf <- st_as_sf(extracted_coordinates, coords = c("long","lat"), crs = 4326)
+
+# Create a map showing population
+survey_source_map <- ggplot(survey_data_sf) +
+    geom_sf(data = map_of_kibuon) +
+    geom_sf(data = survey_data_sf) +
+  geom_sf(aes(size = total)) +
+  labs(title = "Distribution of survey houses",
+         subtitle = "Circle sizes correspond to number of people in the house",
+         x = "Longitude",
+         y = "Lattitude") 
+
+survey_source_map
+# save plot locally
+ggsave("survey_source_map.png", plot = survey_source_map, device = "png", path ="web_app_kibuon_data/", scale = 1)
+
+
+
+# prediction_test <- survey_data %>% 
+#   mutate(prediction = predict(mod, type = "response"))
+# prediction_test %>% ggplot( aes(x = prediction)) + geom_bar()
+# prediction_test %>% ggplot( aes(x = household_liters_day)) + geom_bar()
+
+
+
+
+
+
+```
+
+
+```{r}
+# file_path <- "distances.xlsx"
+# distances_data<- read_xlsx(file_path) %>%
+#                         clean_names()
+# 
+# 
+# # distribuion plots
+# 
+# distances_data %>% ggplot(aes(x = distance_to_kater)) + geom_histogram(binwidth = 100) + xlim(0, 3000)
+# 
+# distances_data %>% ggplot(aes(x = distance_to_ombolwanda)) + geom_histogram() + xlim(0, 3000)
+# 
+# distances_data %>% ggplot(aes(x = distance_to_kawegi)) + geom_histogram() + xlim(0, 3000)
+# 
+# distances_data %>% ggplot(aes(x = distance_to_munyu )) + geom_histogram()+ xlim(0, 3000)
 
 
 ```

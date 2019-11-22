@@ -1,0 +1,11 @@
+---
+title: "Map"
+author: "Billy Koech"
+date: "11/21/2019"
+output: html_document
+---
+
+
+# Map
+
+The trip was scheduled to take two weeks. Given that the team on the ground was composed of just 8 people, time became a significant contrain on the number of houses that could be interviewed. Therefore the team made the choice to only conduct an interview at every 5th house. As for the remaining houses the team collected data on the coordinates of the compounds, assigned a house code to each, and counted the number of people living in the households. The plot below shows the spatial distribution of these houses. The size of the circles corresponsd to the number of people in each household therefore one can get a general sense of the density at different regions in the community.

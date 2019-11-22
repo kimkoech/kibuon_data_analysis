@@ -1,0 +1,27 @@
+---
+title: "Survey Responses Map"
+author: "Billy Koech"
+date: "11/21/2019"
+output: html_document
+---
+
+
+
+## Sampling data from the community
+
+The map below shows the homes in the community that were interviewed in order to collect get sample data on the demographics and trends in water usage in the community. The data corresposponding to the follwing variables were collected:
+* Number of people living in the house
+* Number of children who attend school in the household
+* Type of schools attended by children in the household
+* Time taken by children to travel to school
+* Sources of water in the dry season
+* Sources of water in the wet season
+* Time taken to travel to water sources in the respective seasons
+* Methods for travelling to the water sources
+* Challenges faced with regards to water collection
+* Amount of water used per day in liters per household for general purposes (cleaning, washing, bathing, etc)
+* Amount of water used for driling in liters per day per household
+* Gender and age of the people who collect water for the household
+* Methods of cleaning water for members of the household
+* Symptoms of illnesses in the community
+* Cost for buying water from neighbouring communities

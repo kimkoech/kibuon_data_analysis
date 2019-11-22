@@ -1,0 +1,14 @@
+---
+title: "Distance distribution"
+author: "Billy Koech"
+date: "11/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Distribution of distances to potential well locations
+
+While in the community, the team also collected
