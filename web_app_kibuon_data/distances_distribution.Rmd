@@ -5,10 +5,10 @@ date: "11/21/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Distribution of distances to potential well locations
 
-While in the community, the team also collected
+Engineers without Borders Chapters usually work on water related and health related projects in different parts of the world. Based on assesment data the team togehter with the community concluded that the greatest need in the community is water. This led to the initiation of a partnership to start a water provision project for the community.
+
+Therefore, while in the community, the team also collected the gps coordinates for potential locations for drillings. These coordinates combined with the coordinates for all the houses was used to compute the distance from each potential well location to each to each house using the haversine formula. The distribution plots below show the distribution of distances from each potential well location to each house in meters.
+

@@ -28,9 +28,9 @@ Riviewed and discussed the pros and cons of two past projects
 ## Source of data
 ### Background
 
-I am a member of the Harvard SEAS Engineers Without Borders Chapter. In this student organization we work on projects located in developing countries to provide engineering solutions to challenges faced by local communities. One of our projects in Kenya deal with the provision of clean portable water to the communities. In the summer of 2019, I travelled to Kenya with a team of 8 to collect data on water usage trends and needs in the community. That collected data is availble in an excel sheet [here](raw-data/survey_data.xlsx)
+I am a member of the Harvard SEAS Engineers Without Borders Chapter. In this student organization we work on projects located in developing countries to provide engineering solutions to challenges faced by local communities. One of our projects in Kenya deal with the provision of clean portable water to the communities. In the summer of 2019, I travelled to Kenya with a team of 8 to collect data on water usage trends and needs in the community. That collected data is availble in an excel sheet [here](https://github.com/kimkoech/kibuon_data_analysis/blob/master/raw-data/survey_data.xlsx)
 
-While in the community we also collected geospatial data and created a google earth kmz map. The kmz file can be found [here](raw-data/map.kmz).
+While in the community we also collected geospatial data and created a google earth kmz map. The kmz file can be found [here](https://github.com/kimkoech/kibuon_data_analysis/blob/master/raw-data/map.kmz).
 
 ## What you have done with it so far and what you plan to do?
 
@@ -48,9 +48,13 @@ I wrote a python script to parse the Kmz data into json file. I plan to use the 
 file_path <- "raw-data/survey_data.xlsx"
 
 # DATA Source 1:
+# This is the survey data recorded on an excel sheet. It consists of responses pertaining to water usage
+# An attachmennt of the survey questions is inlcuded in the raw-data folder as Household_Survey
 survey_data <- read_xlsx(file_path, 
                         range = cell_rows(1:41)) %>%
                         clean_names()
+
+write.csv(survey_data, "web_app_kibuon_data/raw-data/survey_data.csv")
 
 
 # graph of household liters per day versus number of people
@@ -58,11 +62,11 @@ survey_data <- read_xlsx(file_path,
 survey_data %>%
   ggplot(aes(x = total,
              y = household_liters_day,
-             color = wet_season_water_source)) + 
-  geom_line() + 
+             fill = wet_season_water_source)) + 
+  geom_col() + 
   labs(
     x = "Total number of people in household",
-    title = "Water usage trends",
+    title = "Sources of water during the wet season",
     y = "Liters of water used per day per household",
     color = "Water sources"
   )
@@ -93,8 +97,13 @@ gathered_ages <-gather(combined_ages,
 write.csv(gathered_ages, "web_app_kibuon_data/gathered_ages.csv")
 
 
+gathered_ages$age_range <- factor(gathered_ages$age_range,
+                                        levels = c("under5",
+                                                   "from_6_to_14",
+                                                   "from_15_to_62",
+                                                   "over62"))
 # plot distribution
-ggplot(gathered_ages, aes(x = age_range,
+age_dist_col <- ggplot(gathered_ages, aes(x = age_range,
                           y = number_of_people,
                           group = age_range)) +
   geom_col(fill = "#6ef0d1") +
@@ -103,7 +112,11 @@ ggplot(gathered_ages, aes(x = age_range,
     title = "Distribution of ages in the community",
     subtitle = "Which age group has the largest population?",
     y = "Number of people"
-  )
+  ) + scale_x_discrete(labels = c("Under 5","from 6 to 14","from 15 to 62","Over 62"))
+
+age_dist_col
+
+ggsave("age_dist_col_graph.png", plot = age_dist_col, device = "png", path ="web_app_kibuon_data/", scale = 1)
 
 
 ```
@@ -139,7 +152,6 @@ unzip(map_zip_file, overwrite = TRUE, exdir = "raw-data/")
 
 # DATA Source 2:
 map_of_kibuon <- st_read("raw-data/Kibuon_Map_-_Oct_15/Geographic_Borders-polygon.shp")
-
 # DATA Source 3:
 distances_to_wells <- read.csv("parsing-data/distances_to_wells.csv") %>% clean_names()
 
@@ -176,7 +188,7 @@ ggsave("map_plot.png", plot = map_plot, device = "png", path ="web_app_kibuon_da
 pop_map <- ggplot(converted_to_sf) +
     geom_sf(data = map_of_kibuon) +
     geom_sf(data = converted_to_sf) +
-  geom_sf(aes(size = number_of_people)) +
+  geom_sf(aes(size = number_of_people), show.legend = "point") +
   labs(title = "Spatial distribution of houses in the community of Kibuon",
          subtitle = "Circle sizes correspond to number of people in the house",
          x = "Longitude",
@@ -200,16 +212,25 @@ gathered_data <- gather(combined,
                        value = "distance_value",
                        kandida:unassessed,
                        na.rm = TRUE)
+# labeller
+label_names <- as_labeller(c(`kandida` = "Kandida",
+                             `kater` = "Kater",
+                             `kawegi` = "Kawegi",
+                             `near_kibuon_maranatha_church` = "Kibuon Maranatha",
+                             `near_munyu_maranatha_church` = "Munyu Maranatha",
+                             `near_umbolwanda` = "Ombolwanda",
+                             `shirikisho_church` = "Shirikisho",
+                             `unassessed` = "Unassesed Location"))
 
 # make a histogram plot
-distance_dist_plots <- gathered_data %>% ggplot(aes(x = distance_value)) + geom_histogram(binwidth = 100) + xlim(0, 3000) + facet_wrap(~well) + labs(title = "Distribution of distances from each potential well location to each house",
+distance_dist_plots <- gathered_data %>% ggplot(aes(x = distance_value)) + geom_histogram(binwidth = 100) + xlim(0, 3000) + facet_wrap(~well, labeller = label_names, ncol = 4) + labs(title = "Distribution of distances from each potential well location to each house",
          subtitle = "Each facet corresponds to a different location",
-         x = "Distance to house",
+         x = "Distance to house in meters",
          y = "Count") 
 
 distance_dist_plots
 
-ggsave("distance_dist_plots.png", plot = distance_dist_plots, device = "png", path ="web_app_kibuon_data/", scale = 1)
+ggsave("distance_dist_plots.png", plot = distance_dist_plots, device = "png", path ="web_app_kibuon_data/", scale = 1, width = 10)
 ```
 
 
@@ -264,13 +285,13 @@ survey_data_sf <- st_as_sf(extracted_coordinates, coords = c("long","lat"), crs 
 survey_source_map <- ggplot(survey_data_sf) +
     geom_sf(data = map_of_kibuon) +
     geom_sf(data = survey_data_sf) +
-  geom_sf(aes(size = total)) +
+  geom_sf(aes(size = total), show.legend = "point") +
   labs(title = "Distribution of survey houses",
          subtitle = "Circle sizes correspond to number of people in the house",
          x = "Longitude",
          y = "Lattitude") 
 
-survey_source_map
+survey_source_map 
 # save plot locally
 ggsave("survey_source_map.png", plot = survey_source_map, device = "png", path ="web_app_kibuon_data/", scale = 1)
 

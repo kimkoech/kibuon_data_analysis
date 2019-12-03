@@ -58,20 +58,21 @@ ui <- navbarPage( "Kibuon Data Analysis",
                                     )
                             ),
                            tabPanel("Age distribution", includeMarkdown("age_distribution.Rmd"),
-                                    plotOutput("age_distribution")
+                                    #plotOutput("age_distribution")
+                                    imageOutput("age_distribution")
                            ),
-                           tabPanel("Distance distribution", "Paragraph description goes here",
+                           tabPanel("Distance distribution", 
+                                    includeMarkdown("distances_distribution.Rmd"),
                                     imageOutput("image_2")
                            ),
-                           tabPanel("Water Usage", "Paragraph description goes here",
+                           tabPanel("Water Usage", includeMarkdown("water_usage.Rmd"),
                                     plotOutput("plot_3"),
                                     plotOutput("plot_4")
                            )
                            
-                           
                           ),
                 
-                tabPanel("Tour", "Hello")
+                tabPanel("Tour", includeMarkdown("tour.Rmd"))
 )
 
 # Define server logic required to draw a 
@@ -79,9 +80,8 @@ server <- function(input, output) {
 
    
     # load data
-    file_path <- "../raw-data/survey_data.xlsx"
-    survey_data <- read_xlsx(file_path, 
-                             range = cell_rows(1:41)) %>%
+    file_path <- "raw-data/survey_data.csv"
+    survey_data <- read.csv(file_path) %>%
         clean_names()
     
     # Distribution of number of people per household in the community
@@ -100,31 +100,36 @@ server <- function(input, output) {
     
      
    # Distribution of ages
-     output$age_distribution <-renderPlot({
-     ggplot(read.csv("gathered_ages.csv"), aes(x = age_range,
-                               y = number_of_people,
-                               group = age_range)) +
-         geom_col(fill = "#6ef0d1") +
-         labs(
-             x = "Age range",
-             title = "Distribution of ages in the community",
-             subtitle = "Which age group has the largest population?",
-             y = "Number of people"
-         )
-        })
+    output$age_distribution <-renderImage({ 
+        age_dist_graph<- list(src = "age_dist_col_graph.png", width = 600, height = 600, style="text-align: center;")
+        age_dist_graph
+    }, deleteFile = FALSE)
+    
+     # output$age_distribution <-renderPlot({
+     # ggplot(read.csv("gathered_ages.csv"), aes(x = age_range,
+     #                           y = number_of_people,
+     #                           group = age_range)) +
+     #     geom_col(fill = "#6ef0d1") +
+     #     labs(
+     #         x = "Age range",
+     #         title = "Distribution of ages in the community",
+     #         subtitle = "Which age group has the largest population?",
+     #         y = "Number of people"
+     #     )
+     #    })
      
      
      output$image_0 <- renderImage({ 
-         about_page_map<- list(src = "map_plot.png", width = 600, height = 600, style="text-align: center;")
+         about_page_map<- list(src = "map_plot.png", width = 800, style="text-align: center;")
          about_page_map
      }, deleteFile = FALSE)
      
      output$image_1 <- renderImage({ 
-         spatial_dist <- list(src = "spatial_dist.png", width = 600, height = 600, style="text-align: center;")
+         spatial_dist <- list(src = "spatial_dist.png", width = 800, style="text-align: center;")
          spatial_dist
      }, deleteFile = FALSE)
      output$image_2 <- renderImage({ 
-         spatial_dist <- list(src = "distance_dist_plots.png", width = 600, height = 600, style="text-align: center;")
+         spatial_dist <- list(src = "distance_dist_plots.png", height = 600, style="text-align: center;")
          spatial_dist
      }, deleteFile = FALSE)
      
@@ -152,7 +157,7 @@ server <- function(input, output) {
      })
      
      output$image_5 <- renderImage({ 
-         survey_source <- list(src = "survey_source_map.png", width = 600, height = 600, style="text-align: center;")
+         survey_source <- list(src = "survey_source_map.png", width = 800, style="text-align: center;")
          survey_source
      }, deleteFile = FALSE)
 }
