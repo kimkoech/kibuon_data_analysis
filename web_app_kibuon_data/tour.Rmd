@@ -1,0 +1,29 @@
+---
+title: "Tour"
+author: "Billy Koech"
+date: "12/3/2019"
+output: html_document
+---
+
+## Tour
+
+The map data is extracted from a kmz file that consists of the geographic boundaries of the Kibuon community. This map was created by the Harvard EWB team over the summer of 2019 while conducting an assesment trip in Kibuon, Kenya. With the use of [mygeodata](https://mygeodata.cloud/converter/kmz-to-shp) the kmz file is converted into a shape file (which is more compatible with R studio). The shape files are then imported and used to plot and render the visalizations on the Survey Responses and Map pages.
+
+Furthermore, the kmz file is also used to extract population data on the community. This is possible because while in the community, the team recorded the total number of people in each household in the description section of the kmz. The descriptions are recorded in xml format. For example, a subsection consisting of a description looks like the chunck of code below:
+
+
+```
+name": "A1*",
+"description": "10 adults, 1 child",
+"styleUrl": "#msn_grn-blank2",
+"Point": { "coordinates": "34.3947095051408,-1.08380898223452,0" }
+}
+```
+
+The extraction is done using a python script that parses the xml data as a dict and iteratively extracts and sums the numbers recorded for each house. The python script can be found [here](https://github.com/kimkoech/kibuon_data_analysis/blob/master/parsing-data/parser.py).
+
+
+The data on water usage is based on a survey that was conducted on 40 houses in the community. The decision on which houses to survey was made based on the spatial distribution; that is, the objective was to ensure spatial represantation of the entire community. The page on survey data sources shows the houses that wer surveyed in the community.
+
+
+The data on water usage is used to create a linear model that estimates water need as function of the number of people in the community. In this case, the survey data acts as the training data and the community map data surveys as the testing data. The regression is done in this way because the map data contains just information on the number of people in the household. The survey data is extrapolated and used to infer the amount of water used by the households recorded in the map.

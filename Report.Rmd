@@ -9,12 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 
 # milestone #4 packages
+
 library(tidyverse)
 library("janitor")
 library(dplyr)
 library(readxl) # package for importing data
-
-
 ```
 
 # Meeting with CA (Milestone #1)
@@ -50,9 +49,11 @@ file_path <- "raw-data/survey_data.xlsx"
 # DATA Source 1:
 # This is the survey data recorded on an excel sheet. It consists of responses pertaining to water usage
 # An attachmennt of the survey questions is inlcuded in the raw-data folder as Household_Survey
-survey_data <- read_xlsx(file_path, 
-                        range = cell_rows(1:41)) %>%
-                        clean_names()
+
+survey_data <- read_xlsx(file_path,
+  range = cell_rows(1:41)
+) %>%
+  clean_names()
 
 write.csv(survey_data, "web_app_kibuon_data/raw-data/survey_data.csv")
 
@@ -60,10 +61,12 @@ write.csv(survey_data, "web_app_kibuon_data/raw-data/survey_data.csv")
 # graph of household liters per day versus number of people
 
 survey_data %>%
-  ggplot(aes(x = total,
-             y = household_liters_day,
-             fill = wet_season_water_source)) + 
-  geom_col() + 
+  ggplot(aes(
+    x = total,
+    y = household_liters_day,
+    fill = wet_season_water_source
+  )) +
+  geom_col() +
   labs(
     x = "Total number of people in household",
     title = "Sources of water during the wet season",
@@ -77,48 +80,64 @@ survey_data %>%
 # distribution of ages in the community
 
 combined_ages <- survey_data %>%
-  mutate(under5 = x5_under_m + x5_under_f,
-         from_6_to_14 = x6_14_m + x6_14_f,
-         from_15_to_62 = x15_62_f + x15_62_m,
-         over62 = over_62_m + over_62_f)
+  mutate(
+    under5 = x5_under_m + x5_under_f,
+    from_6_to_14 = x6_14_m + x6_14_f,
+    from_15_to_62 = x15_62_f + x15_62_m,
+    over62 = over_62_m + over_62_f
+  )
 
 # gather the table
-gathered_ages <-gather(combined_ages,
-                       key = "age_range",
-                       value = "number_of_people",
-                       under5:over62,
-                       na.rm = TRUE) 
 
+gathered_ages <- gather(combined_ages,
+  key = "age_range",
+  value = "number_of_people",
+  under5:over62,
+  na.rm = TRUE
+)
 
-# age_dist_df <- data.frame(age_range = rep(gathered_ages$age_range, times = gathered_ages$number_of_people))
 
 
 # WRITE CLEAN DATA TO FOLDER
+
 write.csv(gathered_ages, "web_app_kibuon_data/gathered_ages.csv")
 
-
 gathered_ages$age_range <- factor(gathered_ages$age_range,
-                                        levels = c("under5",
-                                                   "from_6_to_14",
-                                                   "from_15_to_62",
-                                                   "over62"))
+  levels = c(
+    "under5",
+    "from_6_to_14",
+    "from_15_to_62",
+    "over62"
+  )
+)
 # plot distribution
-age_dist_col <- ggplot(gathered_ages, aes(x = age_range,
-                          y = number_of_people,
-                          group = age_range)) +
+
+age_dist_col <- ggplot(gathered_ages, aes(
+  x = age_range,
+  y = number_of_people,
+  group = age_range
+)) +
   geom_col(fill = "#6ef0d1") +
   labs(
     x = "Age range",
     title = "Distribution of ages in the community",
     subtitle = "Which age group has the largest population?",
     y = "Number of people"
-  ) + scale_x_discrete(labels = c("Under 5","from 6 to 14","from 15 to 62","Over 62"))
+  ) + scale_x_discrete(labels = c(
+    "Under 5",
+    "from 6 to 14",
+    "from 15 to 62",
+    "Over 62"
+  ))
 
 age_dist_col
 
-ggsave("age_dist_col_graph.png", plot = age_dist_col, device = "png", path ="web_app_kibuon_data/", scale = 1)
-
-
+ggsave("age_dist_col_graph.png",
+  plot = age_dist_col,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1
+)
 ```
 
 
@@ -140,66 +159,90 @@ Made about page
 # Milestone #8
 ```{r DATA SOURCES}
 # import needed libraries
+
 library(sf)
 
 # load the remaining data
-
 # shape_file
-# generated from
+
 map_zip_file <- "raw-data/mygeodata.zip"
-unzip(map_zip_file, overwrite = TRUE, exdir = "raw-data/")
+
+unzip(map_zip_file,
+  overwrite = TRUE,
+  exdir = "raw-data/"
+)
 
 
 # DATA Source 2:
 map_of_kibuon <- st_read("raw-data/Kibuon_Map_-_Oct_15/Geographic_Borders-polygon.shp")
 # DATA Source 3:
-distances_to_wells <- read.csv("parsing-data/distances_to_wells.csv") %>% clean_names()
+distances_to_wells <- read.csv("parsing-data/distances_to_wells.csv") %>%
+  clean_names()
 
 # DATA Source 4:
-distances_to_water_sources <- read.csv("parsing-data/distances_to_water_sources.csv") %>% clean_names()
+distances_to_water_sources <- read.csv("parsing-data/distances_to_water_sources.csv") %>%
+  clean_names()
 
 # left join Source 2 and 3 to create a combined table
-combined <- left_join(distances_to_wells, distances_to_water_sources, by = c("house_code", "long", "lat"))
 
-converted_to_sf <- st_as_sf(combined, coords = c("long","lat"), crs = 4326)
+combined <- left_join(distances_to_wells,
+  distances_to_water_sources,
+  by = c("house_code", "long", "lat")
+)
+
+converted_to_sf <- st_as_sf(combined,
+  coords = c("long", "lat"),
+  crs = 4326
+)
 ```
 
 ```{r}
 # create a map for about page
+
 map_of_kibuon <- st_read("raw-data/Kibuon_Map_-_Oct_15/Geographic_Borders-polygon.shp")
+
 map_plot <- ggplot() +
   geom_sf(data = map_of_kibuon) +
-  labs(title = "Geographic boundaries of Kibuon, Kenya",
-         subtitle = "From top left clockwise: Kibuon A, B, C, D.",
-         x = "Longitude",
-         y = "Lattitude") 
+  labs(
+    title = "Geographic boundaries of Kibuon, Kenya",
+    subtitle = "From top left clockwise: Kibuon A, B, C, D.",
+    x = "Longitude",
+    y = "Lattitude"
+  )
 
 map_plot
 
-ggsave("map_plot.png", plot = map_plot, device = "png", path ="web_app_kibuon_data/", scale = 1)
-
-
-
+ggsave("map_plot.png",
+  plot = map_plot,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1
+)
 ```
 
 
 ```{r}
 # Create a map showing population
+
+
 pop_map <- ggplot(converted_to_sf) +
-    geom_sf(data = map_of_kibuon) +
-    geom_sf(data = converted_to_sf) +
+  geom_sf(data = map_of_kibuon) +
+  geom_sf(data = converted_to_sf) +
   geom_sf(aes(size = number_of_people), show.legend = "point") +
-  labs(title = "Spatial distribution of houses in the community of Kibuon",
-         subtitle = "Circle sizes correspond to number of people in the house",
-         x = "Longitude",
-         y = "Lattitude")
+  labs(
+    title = "Spatial distribution of houses in the community of Kibuon",
+    subtitle = "Circle sizes correspond to number of people in the house",
+    x = "Longitude",
+    y = "Lattitude"
+  )
+
+# show
 
 pop_map
+
 # save plot locally
-ggsave("spatial_dist.png", plot = pop_map, device = "png", path ="web_app_kibuon_data/", scale = 1)
 
-
-
+ggsave("spatial_dist.png", plot = pop_map, device = "png", path = "web_app_kibuon_data/", scale = 1)
 ```
 
 
@@ -207,133 +250,180 @@ ggsave("spatial_dist.png", plot = pop_map, device = "png", path ="web_app_kibuon
 # create distribution plots to see distances based on combined data
 
 # gather data
+
 gathered_data <- gather(combined,
-                       key = "well",
-                       value = "distance_value",
-                       kandida:unassessed,
-                       na.rm = TRUE)
+  key = "well",
+  value = "distance_value",
+  kandida:unassessed,
+  na.rm = TRUE
+)
+
+
 # labeller
-label_names <- as_labeller(c(`kandida` = "Kandida",
-                             `kater` = "Kater",
-                             `kawegi` = "Kawegi",
-                             `near_kibuon_maranatha_church` = "Kibuon Maranatha",
-                             `near_munyu_maranatha_church` = "Munyu Maranatha",
-                             `near_umbolwanda` = "Ombolwanda",
-                             `shirikisho_church` = "Shirikisho",
-                             `unassessed` = "Unassesed Location"))
+
+label_names <- as_labeller(c(
+  `kandida` = "Kandida",
+  `kater` = "Kater",
+  `kawegi` = "Kawegi",
+  `near_kibuon_maranatha_church` = "Kibuon Maranatha",
+  `near_munyu_maranatha_church` = "Munyu Maranatha",
+  `near_umbolwanda` = "Ombolwanda",
+  `shirikisho_church` = "Shirikisho",
+  `unassessed` = "Unassesed Location"
+))
 
 # make a histogram plot
-distance_dist_plots <- gathered_data %>% ggplot(aes(x = distance_value)) + geom_histogram(binwidth = 100) + xlim(0, 3000) + facet_wrap(~well, labeller = label_names, ncol = 4) + labs(title = "Distribution of distances from each potential well location to each house",
-         subtitle = "Each facet corresponds to a different location",
-         x = "Distance to house in meters",
-         y = "Count") 
+
+distance_dist_plots <- gathered_data %>%
+  ggplot(aes(x = distance_value)) +
+  geom_histogram(binwidth = 100) +
+  xlim(0, 3000) + facet_wrap(~well,
+    labeller = label_names,
+    ncol = 4
+  ) +
+  labs(
+    title = "Distribution of distances from each potential well location to each house",
+    subtitle = "Each facet corresponds to a different location",
+    x = "Distance to house in meters",
+    y = "Count"
+  )
 
 distance_dist_plots
 
-ggsave("distance_dist_plots.png", plot = distance_dist_plots, device = "png", path ="web_app_kibuon_data/", scale = 1, width = 10)
+ggsave("distance_dist_plots.png",
+  plot = distance_dist_plots,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1,
+  width = 10
+)
 ```
 
 
 ```{r}
 # create model of water usage as a function of location, or as function of number of people in the household
-# then test the data on the 
+# then test the data on the
 library(tidymodels)
 
 # model fo water usage as a function of total number of people in the house
-mod <- glm(data = survey_data, formula = household_liters_day ~ total)
+mod <- glm(
+  data = survey_data,
+  formula = household_liters_day ~ total
+)
 
 # plot of the model
-linear_reg <- ggplot(survey_data, aes(y = household_liters_day, x= total))+
-  geom_jitter(height = 0.2) + 
-  geom_smooth(method = "glm", se= TRUE)+
-             labs(
-                 x = "Total number of people per household ",
-                 title = "Linear model of water usage per day as a fucion of number of people",
-                 subtitle = "Which age group has the largest population?",
-                 y = "Water usage per day in liters"
-             )
+linear_reg <- ggplot(
+  survey_data,
+  aes(
+    y = household_liters_day,
+    x = total
+  )
+) +
+  geom_jitter(height = 0.2) +
+  geom_smooth(
+    method = "glm",
+    se = TRUE
+  ) +
+  labs(
+    x = "Total number of people per household ",
+    title = "Linear model of water usage per day as a fucion of number of people",
+    subtitle = "Which age group has the largest population?",
+    y = "Water usage per day in liters"
+  )
 
 linear_reg
-ggsave("linear_reg.png", plot = linear_reg, device = "png", path ="web_app_kibuon_data/", scale = 1)
 
+ggsave("linear_reg.png",
+  plot = linear_reg,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1
+)
 ```
 
 
 ```{r}
 # extrapolate and apply to data of entire community to get water usage per day
+
 extrapolation <- combined %>%
   mutate(estimate = number_of_people * coef(mod)[[2]] + coef(mod)[[1]])
 
 # write to app folder and plot
 write.csv(extrapolation, "web_app_kibuon_data/extrapolation.csv")
-extrapolation_graph <- ggplot(extrapolation, aes(y = estimate, x= number_of_people)) + geom_point() + geom_line() +
-             labs(
-                 x = "Total number of people per household ",
-                 title = "Application of a linear model to estimate water usage",
-                 subtitle = "Water usage is based on interview responses",
-                 y = "Extrapolated water usage per day in liters"
-             )
+extrapolation_graph <- ggplot(
+  extrapolation,
+  aes(
+    y = estimate,
+    x = number_of_people
+  )
+) +
+  geom_point() +
+  geom_line() +
+  labs(
+    x = "Total number of people per household ",
+    title = "Application of a linear model to estimate water usage",
+    subtitle = "Water usage is based on interview responses",
+    y = "Extrapolated water usage per day in liters"
+  )
+
 
 extrapolation_graph
-ggsave("extrapolation_graph.png", plot = extrapolation_graph, device = "png", path ="web_app_kibuon_data/", scale = 1)
 
+ggsave("extrapolation_graph.png",
+  plot = extrapolation_graph,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1
+)
 ```
 
 
 ```{r}
 
 # create plot of the sources of the survey data
-extracted_coordinates <- survey_data %>% separate(gps_coordinates, sep = ",", c("lat", "long"))
+
+extracted_coordinates <- survey_data %>%
+  separate(gps_coordinates,
+    sep = ",",
+    c("lat", "long")
+  )
+
+
 # remove NA's
-extracted_coordinates <- extracted_coordinates %>% filter(!is.na(lat))
+
+extracted_coordinates <- extracted_coordinates %>%
+  filter(!is.na(lat))
+
+
 # convert st to sf
-survey_data_sf <- st_as_sf(extracted_coordinates, coords = c("long","lat"), crs = 4326)
+
+survey_data_sf <- st_as_sf(extracted_coordinates,
+  coords = c("long", "lat"),
+  crs = 4326
+)
 
 # Create a map showing population
+
 survey_source_map <- ggplot(survey_data_sf) +
-    geom_sf(data = map_of_kibuon) +
-    geom_sf(data = survey_data_sf) +
+  geom_sf(data = map_of_kibuon) +
+  geom_sf(data = survey_data_sf) +
   geom_sf(aes(size = total), show.legend = "point") +
-  labs(title = "Distribution of survey houses",
-         subtitle = "Circle sizes correspond to number of people in the house",
-         x = "Longitude",
-         y = "Lattitude") 
+  labs(
+    title = "Distribution of survey houses",
+    subtitle = "Circle sizes correspond to number of people in the house",
+    x = "Longitude",
+    y = "Lattitude"
+  )
 
-survey_source_map 
+survey_source_map
 # save plot locally
-ggsave("survey_source_map.png", plot = survey_source_map, device = "png", path ="web_app_kibuon_data/", scale = 1)
-
-
-
-# prediction_test <- survey_data %>% 
-#   mutate(prediction = predict(mod, type = "response"))
-# prediction_test %>% ggplot( aes(x = prediction)) + geom_bar()
-# prediction_test %>% ggplot( aes(x = household_liters_day)) + geom_bar()
-
-
-
-
-
-
+ggsave("survey_source_map.png",
+  plot = survey_source_map,
+  device = "png",
+  path = "web_app_kibuon_data/",
+  scale = 1
+)
 ```
 
 
-```{r}
-# file_path <- "distances.xlsx"
-# distances_data<- read_xlsx(file_path) %>%
-#                         clean_names()
-# 
-# 
-# # distribuion plots
-# 
-# distances_data %>% ggplot(aes(x = distance_to_kater)) + geom_histogram(binwidth = 100) + xlim(0, 3000)
-# 
-# distances_data %>% ggplot(aes(x = distance_to_ombolwanda)) + geom_histogram() + xlim(0, 3000)
-# 
-# distances_data %>% ggplot(aes(x = distance_to_kawegi)) + geom_histogram() + xlim(0, 3000)
-# 
-# distances_data %>% ggplot(aes(x = distance_to_munyu )) + geom_histogram()+ xlim(0, 3000)
-
-
-```
 

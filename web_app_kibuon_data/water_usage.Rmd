@@ -1,0 +1,13 @@
+---
+title: "Water Usage"
+author: "Billy Koech"
+date: "11/21/2019"
+output: html_document
+---
+
+
+## Water Usage
+
+For the interviewed households, the team collected data on amount of water for each house. This data is used to perform a linear regression with the objective of looking for a correlation between the number of people and the amount of water used for general purposes. The first plot shows the linear model. 
+
+For the non-interveiwed households, the team collected information on total number of people in the household. The model made previosly is applied on this data in order to generate an estimate of water need in the community. This is shown in the second plot.

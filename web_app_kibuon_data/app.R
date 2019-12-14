@@ -8,12 +8,15 @@
 #
 
 # packages
+
 library(shiny)
 library(readxl) # package for importing data
 library("janitor")
 library(ggplot2)
 library(tidyverse)
 library(markdown)
+library("htmltools")
+library("vembedr")
 
 
 
@@ -72,71 +75,87 @@ ui <- navbarPage( "Kibuon Data Analysis",
                            
                           ),
                 
-                tabPanel("Tour", includeMarkdown("tour.Rmd"))
+                tabPanel("Tour",
+                         embed_url("https://youtu.be/OC4oy3ddtU4")%>%
+                             div(align = "center"),
+                         includeMarkdown("tour.Rmd")
+                         ),
+                tabPanel("PDF", 
+                         uiOutput("pdfview")
+                         )
 )
 
-# Define server logic required to draw a 
+
+
 server <- function(input, output) {
 
    
     # load data
+    
     file_path <- "raw-data/survey_data.csv"
     survey_data <- read.csv(file_path) %>%
         clean_names()
     
     # Distribution of number of people per household in the community
+    
     output$distPlot <- renderPlot({
+        
         # generate bins based on input$bins from ui.R
+        
         y   <- survey_data$total
         bins <- seq(min(y), max(y), length.out = input$bins + 1)
 
         # draw the histogram with the specified number of bins
-         hist(y, breaks = bins, col = 'darkgray', border = 'white',
+        
+         hist(y,
+              breaks = bins,
+              col = 'darkgray',
+              border = 'white',
               main = "Histogram of the distribution of total number of people per household",
               xlab = "Number of people per household",
               ylab = "Count")
-        #ggplot(survey_data, aes(x = total, bins = input$bins)) + geom_bar()
     })
     
      
    # Distribution of ages
+    
     output$age_distribution <-renderImage({ 
-        age_dist_graph<- list(src = "age_dist_col_graph.png", width = 600, height = 600, style="text-align: center;")
+        age_dist_graph<- list(src = "age_dist_col_graph.png",
+                              width = 600,
+                              height = 600,
+                              style="text-align: center;")
         age_dist_graph
+        
     }, deleteFile = FALSE)
     
-     # output$age_distribution <-renderPlot({
-     # ggplot(read.csv("gathered_ages.csv"), aes(x = age_range,
-     #                           y = number_of_people,
-     #                           group = age_range)) +
-     #     geom_col(fill = "#6ef0d1") +
-     #     labs(
-     #         x = "Age range",
-     #         title = "Distribution of ages in the community",
-     #         subtitle = "Which age group has the largest population?",
-     #         y = "Number of people"
-     #     )
-     #    })
      
      
      output$image_0 <- renderImage({ 
-         about_page_map<- list(src = "map_plot.png", width = 800, style="text-align: center;")
+         about_page_map<- list(src = "map_plot.png",
+                               width = 800,
+                               style="text-align: center;")
          about_page_map
      }, deleteFile = FALSE)
      
      output$image_1 <- renderImage({ 
-         spatial_dist <- list(src = "spatial_dist.png", width = 800, style="text-align: center;")
+         spatial_dist <- list(src = "spatial_dist.png",
+                              width = 800,
+                              style="text-align: center;")
          spatial_dist
      }, deleteFile = FALSE)
      output$image_2 <- renderImage({ 
-         spatial_dist <- list(src = "distance_dist_plots.png", height = 600, style="text-align: center;")
+         spatial_dist <- list(src = "distance_dist_plots.png",
+                              height = 600,
+                              style="text-align: center;")
          spatial_dist
      }, deleteFile = FALSE)
      
      output$plot_3 <-renderPlot({
-         ggplot(survey_data, aes(y = household_liters_day, x= total))+
+         ggplot(survey_data, aes(y = household_liters_day,
+                                 x= total))+
              geom_jitter(height = 0.2) + 
-             geom_smooth(method = "glm", se= TRUE) +
+             geom_smooth(method = "glm",
+                         se= TRUE) +
              labs(
                  x = "Total number of people per household ",
                  title = "Linear model of water usage per day as a funcion of number of people",
@@ -147,7 +166,10 @@ server <- function(input, output) {
      
      output$plot_4 <-renderPlot({
          extrapolation <- read.csv("extrapolation.csv")
-         ggplot(extrapolation, aes(y = estimate, x= number_of_people)) + geom_point() + geom_line() +
+         ggplot(extrapolation, aes(y = estimate,
+                                   x= number_of_people)) +
+             geom_point() +
+             geom_line() +
              labs(
                  x = "Total number of people per household ",
                  title = "Application of a linear model to estimate water usage",
@@ -157,10 +179,17 @@ server <- function(input, output) {
      })
      
      output$image_5 <- renderImage({ 
-         survey_source <- list(src = "survey_source_map.png", width = 800, style="text-align: center;")
+         survey_source <- list(src = "survey_source_map.png",
+                               width = 800,
+                               style="text-align: center;")
          survey_source
      }, deleteFile = FALSE)
+     
+     output$pdfview <- renderUI({
+         tags$iframe(style="height:600px; width:100%; scrolling=yes", src="Kibuon Data Analysis_Report.pdf")
+     })
 }
 
 # Run the application 
+
 shinyApp(ui = ui, server = server)
