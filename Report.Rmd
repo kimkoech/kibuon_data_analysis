@@ -192,7 +192,7 @@ pop_map <- ggplot(converted_to_sf) +
   labs(title = "Spatial distribution of houses in the community of Kibuon",
          subtitle = "Circle sizes correspond to number of people in the house",
          x = "Longitude",
-         y = "Lattitude") 
+         y = "Lattitude")
 
 pop_map
 # save plot locally
@@ -243,7 +243,7 @@ library(tidymodels)
 mod <- glm(data = survey_data, formula = household_liters_day ~ total)
 
 # plot of the model
-ggplot(survey_data, aes(y = household_liters_day, x= total))+
+linear_reg <- ggplot(survey_data, aes(y = household_liters_day, x= total))+
   geom_jitter(height = 0.2) + 
   geom_smooth(method = "glm", se= TRUE)+
              labs(
@@ -252,6 +252,10 @@ ggplot(survey_data, aes(y = household_liters_day, x= total))+
                  subtitle = "Which age group has the largest population?",
                  y = "Water usage per day in liters"
              )
+
+linear_reg
+ggsave("linear_reg.png", plot = linear_reg, device = "png", path ="web_app_kibuon_data/", scale = 1)
+
 ```
 
 
@@ -262,13 +266,17 @@ extrapolation <- combined %>%
 
 # write to app folder and plot
 write.csv(extrapolation, "web_app_kibuon_data/extrapolation.csv")
-ggplot(extrapolation, aes(y = estimate, x= number_of_people)) + geom_point() + geom_line() +
+extrapolation_graph <- ggplot(extrapolation, aes(y = estimate, x= number_of_people)) + geom_point() + geom_line() +
              labs(
                  x = "Total number of people per household ",
                  title = "Application of a linear model to estimate water usage",
                  subtitle = "Water usage is based on interview responses",
                  y = "Extrapolated water usage per day in liters"
              )
+
+extrapolation_graph
+ggsave("extrapolation_graph.png", plot = extrapolation_graph, device = "png", path ="web_app_kibuon_data/", scale = 1)
+
 ```
 
 
